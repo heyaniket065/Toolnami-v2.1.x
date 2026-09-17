@@ -1,0 +1,6 @@
+{
+  "name": "ToolNami",
+  "description": "Fast, free online tools for everyday work — PDF, image, text, SEO and developer utilities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
