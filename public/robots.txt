@@ -10,5 +10,10 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+User-agent: Mediapartners-Google
+Allow: /
+
 User-agent: *
 Allow: /
+
+Sitemap: https://toolnami.com/sitemap.xml

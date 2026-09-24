@@ -1,37 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, FileText, Loader2, RotateCcw } from "lucide-react";
-import { useState } from "react";
+import { FileText, RotateCcw } from "lucide-react";
+import { useState, useMemo } from "react";
 
 import { FileDrop, ToolAlert } from "@/components/tools/file-drop";
-import { ToolShell, toolJsonLd, type ToolFaq } from "@/components/tools/tool-shell";
+import { ToolShell, toolJsonLd } from "@/components/tools/tool-shell";
+import { ToolProcessingState } from "@/components/tools/tool-processing-state";
 import { downloadBlob, formatBytes, savingsLabel, stripExtension } from "@/lib/tool-files";
+import { findLiveTool, getDynamicUses } from "@/lib/phase1-tools";
 
-const TITLE = "PDF Compressor";
-const DESC = "Reduce PDF file size while maintaining quality — free, instant and fully private.";
+const TOOL_DATA = findLiveTool("pdf-compressor");
+const TITLE = TOOL_DATA.title;
+const DESC = TOOL_DATA.description;
 const URL = "https://toolnami.lovable.app/tools/pdf-compressor";
-
-const FAQS: ToolFaq[] = [
-  {
-    q: "Is my PDF uploaded to a server?",
-    a: "No. Compression happens entirely inside your browser using open-source libraries, so your document never leaves your device.",
-  },
-  {
-    q: "How much smaller will my PDF get?",
-    a: "It depends on the file. Documents with unused objects, duplicated resources and heavy metadata shrink the most. Files that are already optimised may barely change, and we tell you honestly when that happens.",
-  },
-  {
-    q: "Will the text stay selectable?",
-    a: "Yes. The tool restructures and cleans the file rather than converting pages to images, so text, links and page order stay intact.",
-  },
-  {
-    q: "Is there a file size limit?",
-    a: "The only limit is your device's memory. Very large PDFs (hundreds of megabytes) may take a few seconds to process.",
-  },
-  {
-    q: "Does it cost anything?",
-    a: "No. The PDF Compressor is completely free with no signup required.",
-  },
-];
+const FAQS = TOOL_DATA.faqs;
 
 export const Route = createFileRoute("/tools/pdf-compressor")({
   head: () => ({
@@ -59,6 +40,8 @@ function PdfCompressorPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ blob: Blob; size: number } | null>(null);
 
+  const dynamicUses = useMemo(() => getDynamicUses(TOOL_DATA.baseUses), []);
+
   const reset = () => {
     setFile(null);
     setResult(null);
@@ -83,7 +66,9 @@ function PdfCompressorPage() {
       const blob = new Blob([out as unknown as BlobPart], { type: "application/pdf" });
       setResult({ blob, size: blob.size });
     } catch {
-      setError("We couldn't process that PDF. It may be corrupted or password-protected.");
+      setError(
+        "We couldn't process that PDF. It may be password-protected or corrupted. Please try another file.",
+      );
     } finally {
       setBusy(false);
     }
@@ -93,13 +78,13 @@ function PdfCompressorPage() {
     <ToolShell
       title={TITLE}
       tagline="Shrink bulky PDFs so they're easy to email, upload and share — without wrecking the quality."
-      categoryLabel="PDF Tools"
+      categoryLabel={TOOL_DATA.categoryLabel}
+      thumbnail={TOOL_DATA.image}
+      badge={TOOL_DATA.badge}
+      dynamicUses={dynamicUses}
+      relatedSlugs={TOOL_DATA.relatedSlugs}
       about="The ToolNami PDF Compressor rebuilds your document with compressed object streams, strips leftover metadata and removes redundant internal structures. Text stays sharp and selectable because pages are never flattened into images. Everything runs locally in your browser, so even confidential contracts and invoices stay private."
-      steps={[
-        "Choose or drag in the PDF you want to shrink.",
-        "Press Compress PDF and wait a moment while it is rebuilt.",
-        "Check the new file size, then download your compressed PDF.",
-      ]}
+      steps={TOOL_DATA.howToSteps}
       benefits={[
         {
           title: "Quality preserved",
@@ -126,15 +111,8 @@ function PdfCompressorPage() {
           body: "No queues or waiting rooms — compression starts immediately.",
         },
       ]}
-      faqs={FAQS}
-      seo={{
-        heading: "Compress PDF files online, free and privately",
-        paragraphs: [
-          "Large PDFs are one of the most common everyday annoyances: attachments bounce back, upload forms reject them and cloud storage fills up. A good PDF compressor solves this by removing what the file doesn't need rather than degrading what you can see.",
-          "ToolNami's compressor focuses on structural optimisation — object stream compression, metadata cleanup and removal of redundant internal references. That means scanned reports, contracts, portfolios, invoices and slide exports usually get noticeably smaller while remaining perfectly readable.",
-          "Because the entire process runs client-side in your browser, nothing is uploaded, stored or logged. That makes it safe for sensitive documents such as legal paperwork, medical forms, bank statements and identity documents.",
-        ],
-      }}
+      faqs={TOOL_DATA.faqs}
+      seo={TOOL_DATA.seoArticle}
     >
       {!file ? (
         <FileDrop
@@ -145,7 +123,7 @@ function PdfCompressorPage() {
             const f = files[0];
             if (!f) return;
             if (!f.name.toLowerCase().endsWith(".pdf") && f.type !== "application/pdf") {
-              setError("Please choose a PDF file.");
+              setError("Please choose a valid PDF document.");
               return;
             }
             setError(null);
@@ -172,39 +150,44 @@ function PdfCompressorPage() {
             </button>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={compress}
-              disabled={busy}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-95 disabled:opacity-60"
-            >
-              {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-              {busy ? "Compressing…" : "Compress PDF"}
-            </button>
-            {result ? (
+          {!busy && !result && !error ? (
+            <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
-                onClick={() =>
-                  downloadBlob(result.blob, `${stripExtension(file.name)}-compressed.pdf`)
-                }
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground transition-all hover:-translate-y-0.5 active:scale-95"
+                onClick={compress}
+                disabled={busy}
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:brightness-110 active:scale-95"
               >
-                <Download className="size-4" /> Download PDF
+                Compress PDF Now
               </button>
-            ) : null}
-          </div>
-
-          {result ? (
-            <ToolAlert tone="success">
-              Done — {formatBytes(file.size)} → {formatBytes(result.size)} (
-              {savingsLabel(file.size, result.size)}).
-            </ToolAlert>
+            </div>
           ) : null}
+
+          {/* Processing, Success, and Error States */}
+          <ToolProcessingState
+            isProcessing={busy}
+            processingMessage="Compressing and rebuilding PDF streams…"
+            isSuccess={!!result}
+            successTitle="PDF Compressed Successfully!"
+            successSubtitle={
+              result
+                ? `Reduced from ${formatBytes(file.size)} to ${formatBytes(result.size)} (${savingsLabel(file.size, result.size)} savings).`
+                : undefined
+            }
+            downloadLabel="Download Compressed PDF"
+            onDownload={() => {
+              if (result && file) {
+                downloadBlob(result.blob, `${stripExtension(file.name)}-compressed.pdf`);
+              }
+            }}
+            error={error}
+            onRetry={compress}
+            onReset={reset}
+          />
         </div>
       )}
 
-      {error ? <ToolAlert>{error}</ToolAlert> : null}
+      {error && !file ? <ToolAlert>{error}</ToolAlert> : null}
     </ToolShell>
   );
 }

@@ -1,0 +1,144 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with display name, avatar, email, and preferences",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Firebase Auth UID",
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address",
+          "maxLength": 256
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Public display name",
+          "maxLength": 100
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Profile picture URL",
+          "maxLength": 1024
+        },
+        "themePreference": {
+          "type": "string",
+          "description": "User selected theme mode",
+          "enum": ["light", "dark", "system"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Account creation ISO timestamp",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Profile update ISO timestamp",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "email"]
+    },
+    "UserFavorite": {
+      "title": "UserFavorite",
+      "description": "Bookmarked favorite tool item",
+      "type": "object",
+      "properties": {
+        "toolSlug": {
+          "type": "string",
+          "description": "Identifier slug of the tool",
+          "maxLength": 64,
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "toolTitle": {
+          "type": "string",
+          "description": "Name of the tool",
+          "maxLength": 120
+        },
+        "addedAt": {
+          "type": "string",
+          "description": "Timestamp when favorited",
+          "format": "date-time"
+        }
+      },
+      "required": ["toolSlug", "toolTitle"]
+    },
+    "ToolRunHistory": {
+      "title": "ToolRunHistory",
+      "description": "Log entry of a tool execution",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique history entry ID",
+          "maxLength": 128
+        },
+        "toolSlug": {
+          "type": "string",
+          "description": "Identifier slug of the tool executed",
+          "maxLength": 64
+        },
+        "toolTitle": {
+          "type": "string",
+          "description": "Name of the tool",
+          "maxLength": 120
+        },
+        "runAt": {
+          "type": "string",
+          "description": "Execution timestamp",
+          "format": "date-time"
+        },
+        "summary": {
+          "type": "string",
+          "description": "Short summary description of the run",
+          "maxLength": 500
+        }
+      },
+      "required": ["toolSlug", "toolTitle", "runAt"]
+    },
+    "ToolStat": {
+      "title": "ToolStat",
+      "description": "Aggregate statistics for each tool",
+      "type": "object",
+      "properties": {
+        "toolSlug": {
+          "type": "string",
+          "description": "Tool identifier slug",
+          "maxLength": 64
+        },
+        "totalRuns": {
+          "type": "number",
+          "description": "Number of times this tool was executed"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "description": "ISO timestamp when stat was last updated",
+          "format": "date-time"
+        }
+      },
+      "required": ["toolSlug", "totalRuns"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "#/entities/UserProfile",
+      "description": "Private profile document for each authenticated user"
+    },
+    "/users/{userId}/favorites/{toolSlug}": {
+      "schema": "#/entities/UserFavorite",
+      "description": "Subcollection of favorite tools for a given user"
+    },
+    "/users/{userId}/history/{historyId}": {
+      "schema": "#/entities/ToolRunHistory",
+      "description": "Subcollection of execution records for a given user"
+    },
+    "/tool_stats/{toolSlug}": {
+      "schema": "#/entities/ToolStat",
+      "description": "Aggregated tool run statistics"
+    }
+  }
+}

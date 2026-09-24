@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
 import { WelcomeModal } from "@/components/site/welcome-modal";
+import { AiAssistant } from "@/components/ai-assistant";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
 
@@ -89,16 +90,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "ToolNami is a clean, fast platform of free online tools for everyday work — PDF, image, text, SEO and developer utilities.",
       },
       { name: "author", content: "Aniket Bhalerao — LuminaLM" },
+      {
+        name: "robots",
+        content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      },
+      {
+        name: "googlebot",
+        content: "index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1",
+      },
+      { property: "og:site_name", content: "ToolNami" },
+      { property: "og:locale", content: "en_US" },
       { property: "og:title", content: "ToolNami — Fast, Free Online Tools" },
       {
         property: "og:description",
         content: "One bright, uncluttered home for the everyday tools you keep searching for.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://toolnami.com/" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:site", content: "@Instgram136" },
+      { name: "twitter:creator", content: "@Instgram136" },
+      { name: "twitter:title", content: "ToolNami — Fast, Free Online Tools" },
+      {
+        name: "twitter:description",
+        content: "One bright, uncluttered home for the everyday tools you keep searching for.",
+      },
       { name: "theme-color", content: "#2563eb" },
     ],
     links: [
+      { rel: "canonical", href: "https://toolnami.com/" },
       {
         rel: "stylesheet",
         href: appCss,
@@ -120,12 +140,74 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 const themeScript = `(function(){try{var t=localStorage.getItem('toolnami-theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}if(t==='dark'){document.documentElement.classList.add('dark');}document.documentElement.style.colorScheme=t;}catch(e){}})();`;
 
+const schemaOrgJsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://toolnami.com/#website",
+      url: "https://toolnami.com",
+      name: "ToolNami",
+      description:
+        "Fast, free online tools for everyday work — PDF, image, text, SEO and developer utilities.",
+      inLanguage: "en-US",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: "https://toolnami.com/tools?q={search_term_string}",
+        },
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://toolnami.com/#app",
+      name: "ToolNami Online Tools Suite",
+      url: "https://toolnami.com",
+      applicationCategory: "UtilitiesApplication",
+      operatingSystem: "Any (browser-based)",
+      description:
+        "High-performance client-side productivity utilities: PDF rotator, compressor, converters, formatters, and calculators.",
+      browserRequirements: "Requires JavaScript. Requires HTML5.",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+      },
+      publisher: {
+        "@id": "https://toolnami.com/#organization",
+      },
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://toolnami.com/#organization",
+      name: "ToolNami by LuminaLM",
+      url: "https://toolnami.com",
+      founder: {
+        "@type": "Person",
+        name: "Aniket Bhalerao",
+        jobTitle: "Creator & Founder of LuminaLM",
+      },
+      sameAs: [
+        "https://youtube.com/@luminalm065",
+        "https://www.instagram.com/hey_aniket_065",
+        "https://x.com/Instgram136",
+        "https://www.linkedin.com/in/aniket-bhalerao-o07",
+        "https://github.com/heyaniket065",
+        "https://www.facebook.com/share/19cdfcUFpw/",
+      ],
+    },
+  ],
+});
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: schemaOrgJsonLd }} />
       </head>
       <body>
         {children}
@@ -141,15 +223,22 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-xl focus:bg-primary focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-primary-foreground focus:shadow-lift focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          Skip to main content
+        </a>
         <div className="flex min-h-screen flex-col">
           <Header />
-          <main className="flex-1">
+          <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
             <Outlet />
           </main>
           <Footer />
         </div>
         <WelcomeModal />
+        <AiAssistant />
         <Toaster position="top-center" richColors />
       </AuthProvider>
     </QueryClientProvider>

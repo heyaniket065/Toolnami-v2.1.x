@@ -6,7 +6,6 @@ import { z } from "zod";
 
 import { Logo } from "@/components/site/logo";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -24,20 +23,44 @@ export const Route = createFileRoute("/auth")({
         content:
           "Log in or sign up for ToolNami to save favorite tools, sync your preferences and unlock upcoming features. Guests can keep using every tool for free.",
       },
+      { property: "og:site_name", content: "ToolNami" },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://toolnami.com/auth" },
       { property: "og:title", content: "Sign In or Create Your ToolNami Account" },
       {
         property: "og:description",
         content: "Save favorites and sync preferences with a free ToolNami account.",
       },
-      { property: "og:type", content: "website" },
+      { property: "og:image", content: "/assets/tools/3d-pdf-compressor.png" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:site", content: "@Instgram136" },
+      { name: "twitter:creator", content: "@Instgram136" },
+      { name: "twitter:title", content: "Sign In or Create Your ToolNami Account" },
+      {
+        name: "twitter:description",
+        content: "Save favorites and sync preferences with a free ToolNami account.",
+      },
+      { name: "twitter:image", content: "/assets/tools/3d-pdf-compressor.png" },
     ],
+    links: [{ rel: "canonical", href: "https://toolnami.com/auth" }],
   }),
   component: AuthPage,
 });
 
 const emailSchema = z.string().trim().email("Enter a valid email address").max(255);
 const passwordSchema = z.string().min(8, "Password must be at least 8 characters").max(72);
+
+type FirebaseErrorLike = {
+  code?: string;
+  message?: string;
+};
+
+function getFirebaseError(err: unknown): FirebaseErrorLike {
+  if (err && typeof err === "object") {
+    return err as FirebaseErrorLike;
+  }
+  return { message: String(err) };
+}
 
 function GoogleIcon() {
   return (
@@ -62,7 +85,14 @@ function GoogleIcon() {
 function AuthPage() {
   const { mode } = Route.useSearch();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const {
+    user,
+    loading: authLoading,
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    sendPasswordReset,
+  } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -88,13 +118,16 @@ function AuthPage() {
   const googleSignIn = async () => {
     setBusy("google");
     setError(null);
-    const { error: err } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin },
-    });
-    if (err) {
+    try {
+      await signInWithGoogle();
+      navigate({ to: "/dashboard", replace: true });
+    } catch (err: unknown) {
+      const fbErr = getFirebaseError(err);
+      if (fbErr.code !== "auth/popup-closed-by-user") {
+        setError(fbErr.message || "Google Sign-In failed. Please try again.");
+      }
+    } finally {
       setBusy(null);
-      setError(err.message);
     }
   };
 
@@ -110,15 +143,15 @@ function AuthPage() {
 
     if (mode === "forgot") {
       setBusy("email");
-      const { error: err } = await supabase.auth.resetPasswordForEmail(parsedEmail.data, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      setBusy(null);
-      if (err) {
-        setError(err.message);
-        return;
+      try {
+        await sendPasswordReset(parsedEmail.data);
+        setSentReset(true);
+      } catch (err: unknown) {
+        const fbErr = getFirebaseError(err);
+        setError(fbErr.message || "Failed to send reset link.");
+      } finally {
+        setBusy(null);
       }
-      setSentReset(true);
       return;
     }
 
@@ -131,39 +164,27 @@ function AuthPage() {
     setBusy("email");
 
     if (mode === "signup") {
-      const { data, error: err } = await supabase.auth.signUp({
-        email: parsedEmail.data,
-        password: parsedPassword.data,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: { display_name: name.trim() || parsedEmail.data.split("@")[0] },
-        },
-      });
-      setBusy(null);
-      if (err) {
-        setError(err.message);
-        return;
+      try {
+        await signUpWithEmail(parsedEmail.data, parsedPassword.data, name);
+        navigate({ to: "/dashboard", replace: true });
+      } catch (err: unknown) {
+        const fbErr = getFirebaseError(err);
+        setError(fbErr.message || "Sign up failed.");
+      } finally {
+        setBusy(null);
       }
-      if (!data.session) {
-        setCheckInbox(true);
-        return;
-      }
-      toast.success("Welcome to ToolNami!");
-      navigate({ to: "/dashboard", replace: true });
       return;
     }
 
-    const { error: err } = await supabase.auth.signInWithPassword({
-      email: parsedEmail.data,
-      password: parsedPassword.data,
-    });
-    setBusy(null);
-    if (err) {
-      setError(err.message);
-      return;
+    try {
+      await signInWithEmail(parsedEmail.data, parsedPassword.data);
+      navigate({ to: "/dashboard", replace: true });
+    } catch (err: unknown) {
+      const fbErr = getFirebaseError(err);
+      setError(fbErr.message || "Invalid email or password.");
+    } finally {
+      setBusy(null);
     }
-    toast.success("You're signed in.");
-    navigate({ to: "/dashboard", replace: true });
   };
 
   const title =

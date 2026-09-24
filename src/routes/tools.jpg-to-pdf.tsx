@@ -1,34 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowDown, ArrowUp, Download, ImageIcon, Loader2, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { ArrowDown, ArrowUp, ImageIcon, Plus, Trash2 } from "lucide-react";
+import { useState, useMemo } from "react";
 
 import { FileDrop, ToolAlert } from "@/components/tools/file-drop";
-import { ToolShell, toolJsonLd, type ToolFaq } from "@/components/tools/tool-shell";
+import { ToolShell, toolJsonLd } from "@/components/tools/tool-shell";
+import { ToolProcessingState } from "@/components/tools/tool-processing-state";
 import { downloadBlob, formatBytes } from "@/lib/tool-files";
+import { findLiveTool, getDynamicUses } from "@/lib/phase1-tools";
 
-const TITLE = "JPG to PDF";
-const DESC = "Convert JPG images into PDF documents — free, instant and fully private.";
+const TOOL_DATA = findLiveTool("jpg-to-pdf");
+const TITLE = TOOL_DATA.title;
+const DESC = TOOL_DATA.description;
 const URL = "https://toolnami.lovable.app/tools/jpg-to-pdf";
-
-const FAQS: ToolFaq[] = [
-  {
-    q: "Can I combine several photos into one PDF?",
-    a: "Yes. Add as many JPG or PNG images as you like and reorder them; each becomes one page.",
-  },
-  {
-    q: "Does it change my image quality?",
-    a: "No. Images are embedded at their original resolution, so the PDF looks exactly like the source photos.",
-  },
-  {
-    q: "What page size is used?",
-    a: "Each page matches the aspect ratio of its image, so nothing is cropped or stretched.",
-  },
-  {
-    q: "Are my photos uploaded?",
-    a: "No. The PDF is built inside your browser and never sent to a server.",
-  },
-  { q: "Does it work with PNG too?", a: "Yes, PNG images are supported alongside JPG and JPEG." },
-];
+const FAQS = TOOL_DATA.faqs;
 
 export const Route = createFileRoute("/tools/jpg-to-pdf")({
   head: () => ({
@@ -56,10 +40,12 @@ function JpgToPdfPage() {
   const [error, setError] = useState<string | null>(null);
   const [pdf, setPdf] = useState<Blob | null>(null);
 
+  const dynamicUses = useMemo(() => getDynamicUses(TOOL_DATA.baseUses), []);
+
   const add = (incoming: File[]) => {
     const images = incoming.filter((f) => /image\/(jpeg|jpg|png)/.test(f.type));
     if (images.length === 0) {
-      setError("Please choose JPG, JPEG or PNG images.");
+      setError("Please choose JPG, JPEG or PNG image files.");
       return;
     }
     setError(null);
@@ -99,23 +85,31 @@ function JpgToPdfPage() {
       const out = await doc.save({ useObjectStreams: true });
       setPdf(new Blob([out as unknown as BlobPart], { type: "application/pdf" }));
     } catch {
-      setError("We couldn't convert those images. Please try different files.");
+      setError(
+        "We couldn't convert those images. Please ensure files are valid image formats and try again.",
+      );
     } finally {
       setBusy(false);
     }
+  };
+
+  const resetAll = () => {
+    setFiles([]);
+    setPdf(null);
+    setError(null);
   };
 
   return (
     <ToolShell
       title={TITLE}
       tagline="Turn photos, scans and screenshots into a clean, shareable PDF document."
-      categoryLabel="Converters"
+      categoryLabel={TOOL_DATA.categoryLabel}
+      thumbnail={TOOL_DATA.image}
+      badge={TOOL_DATA.badge}
+      dynamicUses={dynamicUses}
+      relatedSlugs={TOOL_DATA.relatedSlugs}
       about="ToolNami's JPG to PDF converter embeds each image at full resolution on its own page, sized to match the photo so nothing is cropped or padded awkwardly. Add several images, arrange the order, and download a single PDF — all without uploading anything."
-      steps={[
-        "Add one or more JPG, JPEG or PNG images.",
-        "Arrange the pages into the order you want.",
-        "Press Convert to PDF and download your document.",
-      ]}
+      steps={TOOL_DATA.howToSteps}
       benefits={[
         { title: "Original quality", body: "Images are embedded as-is, with no recompression." },
         { title: "Multi-page output", body: "Combine a whole set of scans into one document." },
@@ -127,15 +121,8 @@ function JpgToPdfPage() {
         { title: "Great for submissions", body: "Ideal when a form only accepts PDF uploads." },
         { title: "Free and unlimited", body: "No signup, no watermark, no caps." },
       ]}
-      faqs={FAQS}
-      seo={{
-        heading: "Convert JPG to PDF online, free and secure",
-        paragraphs: [
-          "Plenty of official processes — visa applications, university submissions, insurance claims, expense reports — accept PDF only. But the documents you have are usually photos taken on a phone.",
-          "This converter closes that gap. It places each image on its own correctly proportioned page and produces a single PDF you can attach anywhere, with the original resolution preserved so text on scans stays readable.",
-          "Everything happens locally in your browser using the open-source pdf-lib library, so identity documents, receipts and personal photos are never uploaded or stored.",
-        ],
-      }}
+      faqs={TOOL_DATA.faqs}
+      seo={TOOL_DATA.seoArticle}
     >
       <div className="space-y-4">
         {files.length === 0 ? (
@@ -198,51 +185,68 @@ function JpgToPdfPage() {
               ))}
             </ul>
 
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary">
-              <Plus className="size-4" /> Add more images
-              <input
-                type="file"
-                accept="image/jpeg,image/jpg,image/png"
-                multiple
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files) add(Array.from(e.target.files));
-                  e.target.value = "";
-                }}
-              />
-            </label>
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary">
+                <Plus className="size-4" /> Add more images
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files) add(Array.from(e.target.files));
+                    e.target.value = "";
+                  }}
+                />
+              </label>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
-                onClick={convert}
-                disabled={busy}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-95 disabled:opacity-60"
+                onClick={resetAll}
+                className="text-xs font-semibold text-muted-foreground hover:text-destructive transition-colors"
               >
-                {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-                {busy ? "Converting…" : "Convert to PDF"}
+                Clear all images
               </button>
-              {pdf ? (
-                <button
-                  type="button"
-                  onClick={() => downloadBlob(pdf, "toolnami-images.pdf")}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground transition-all hover:-translate-y-0.5 active:scale-95"
-                >
-                  <Download className="size-4" /> Download PDF
-                </button>
-              ) : null}
             </div>
 
-            {pdf ? (
-              <ToolAlert tone="success">
-                PDF ready — {files.length} page{files.length === 1 ? "" : "s"},{" "}
-                {formatBytes(pdf.size)}.
-              </ToolAlert>
+            {!busy && !pdf && !error ? (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={convert}
+                  disabled={files.length === 0}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:brightness-110 active:scale-95 disabled:opacity-60"
+                >
+                  Convert {files.length} Image{files.length === 1 ? "" : "s"} to PDF
+                </button>
+              </div>
             ) : null}
+
+            {/* Processing, Success, and Error States */}
+            <ToolProcessingState
+              isProcessing={busy}
+              processingMessage="Embedding images at original quality into PDF pages…"
+              isSuccess={!!pdf}
+              successTitle="PDF Created Successfully!"
+              successSubtitle={
+                pdf
+                  ? `Generated clean ${files.length}-page PDF document (${formatBytes(pdf.size)}).`
+                  : undefined
+              }
+              downloadLabel="Download Generated PDF"
+              onDownload={() => {
+                if (pdf) {
+                  downloadBlob(pdf, "toolnami-images.pdf");
+                }
+              }}
+              error={error}
+              onRetry={convert}
+              onReset={resetAll}
+            />
           </>
         )}
 
-        {error ? <ToolAlert>{error}</ToolAlert> : null}
+        {error && files.length === 0 ? <ToolAlert>{error}</ToolAlert> : null}
       </div>
     </ToolShell>
   );

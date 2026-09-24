@@ -25,18 +25,36 @@ export const Route = createFileRoute("/tools/")({
   }),
   head: () => ({
     meta: [
-      { title: "All Online Tools — ToolNami" },
+      { title: "All Online Tools Directory — ToolNami" },
       {
         name: "description",
         content:
           "Browse the full ToolNami directory: PDF, image, text, SEO, developer and conversion tools. Search by name or filter by category.",
       },
-      { property: "og:title", content: "All Online Tools — ToolNami" },
+      {
+        name: "robots",
+        content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      },
+      { property: "og:site_name", content: "ToolNami" },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://toolnami.com/tools" },
+      { property: "og:title", content: "All Online Tools Directory — ToolNami" },
       {
         property: "og:description",
         content: "Search and filter hundreds of free online tools in one clean directory.",
       },
+      { property: "og:image", content: "/assets/tools/3d-pdf-compressor.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:site", content: "@Instgram136" },
+      { name: "twitter:creator", content: "@Instgram136" },
+      { name: "twitter:title", content: "All Online Tools Directory — ToolNami" },
+      {
+        name: "twitter:description",
+        content: "Search and filter hundreds of free online tools in one clean directory.",
+      },
+      { name: "twitter:image", content: "/assets/tools/3d-pdf-compressor.png" },
     ],
+    links: [{ rel: "canonical", href: "https://toolnami.com/tools" }],
   }),
   component: ToolsPage,
 });
@@ -96,14 +114,19 @@ function ToolsPage() {
                 e.preventDefault();
                 setSearch({ q: term.trim() || undefined });
               }}
+              role="search"
+              aria-label="Directory tool search"
               className="mt-8 flex max-w-2xl items-center gap-2 rounded-2xl border border-border bg-card p-2 shadow-soft focus-within:border-primary/40 focus-within:shadow-lift"
             >
-              <Search className="ml-2 size-5 shrink-0 text-muted-foreground" />
+              <label htmlFor="directory-search-input" className="sr-only">
+                Search tools by name or description
+              </label>
+              <Search className="ml-2 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
               <input
+                id="directory-search-input"
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
                 placeholder="Search tools…"
-                aria-label="Search tools"
                 className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground sm:text-base"
               />
               {term ? (
@@ -121,6 +144,7 @@ function ToolsPage() {
               ) : null}
               <button
                 type="submit"
+                aria-label="Submit search"
                 className="inline-flex h-11 shrink-0 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-95"
               >
                 Search
@@ -156,10 +180,11 @@ function ToolsPage() {
       ) : null}
 
       <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-        <div className="flex flex-wrap gap-2">
+        <div role="group" aria-label="Filter tools by category" className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setSearch({ category: undefined })}
+            aria-pressed={!category}
             className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all ${
               !category
                 ? "border-primary bg-primary text-primary-foreground shadow-soft"
@@ -173,6 +198,7 @@ function ToolsPage() {
               key={c.id}
               type="button"
               onClick={() => setSearch({ category: c.slug })}
+              aria-pressed={category === c.slug}
               className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all ${
                 category === c.slug
                   ? "border-primary bg-primary text-primary-foreground shadow-soft"

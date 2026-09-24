@@ -1,15 +1,17 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import {
   Heart,
+  History,
   Loader2,
   LogOut,
   Monitor,
   Moon,
-  Settings,
+  Sparkles,
   Sun,
   Trash2,
   UserRound,
+  Wrench,
+  ExternalLink,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -17,7 +19,6 @@ import { toast } from "sonner";
 import { Reveal } from "@/components/site/reveal";
 import { applyTheme } from "@/components/site/theme-toggle";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -26,12 +27,12 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       {
         name: "description",
         content:
-          "Manage your ToolNami profile, account settings, saved favorite tools and theme preferences in one place.",
+          "Manage your ToolNami profile, account settings, saved favorite tools and execution history in one place.",
       },
       { property: "og:title", content: "Your ToolNami Dashboard" },
       {
         property: "og:description",
-        content: "Profile, saved favorites and theme preferences for your ToolNami account.",
+        content: "Profile, saved favorites and history for your ToolNami account.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -47,57 +48,38 @@ const THEMES = [
   { value: "system", label: "System", Icon: Monitor },
 ] as const;
 
-type FavoriteRow = {
-  id: string;
-  tool_id: string;
-  tools: { title: string; slug: string; description: string | null } | null;
-};
-
 function DashboardPage() {
-  const { user, profile, refreshProfile, signOut } = useAuth();
-  const queryClient = useQueryClient();
+  const {
+    user,
+    profile,
+    favorites,
+    history,
+    toggleFavorite,
+    updateProfileName,
+    updateThemePreference,
+    signOut,
+  } = useAuth();
 
   const [displayName, setDisplayName] = useState("");
   const [savingName, setSavingName] = useState(false);
   const [theme, setTheme] = useState<string>("system");
 
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [savingPassword, setSavingPassword] = useState(false);
-
   useEffect(() => {
-    setDisplayName(profile?.display_name ?? "");
+    setDisplayName(profile?.display_name ?? user?.displayName ?? "");
     setTheme(profile?.theme_preference ?? "system");
-  }, [profile]);
-
-  const favorites = useQuery({
-    queryKey: ["favorites", user?.id],
-    enabled: Boolean(user),
-    queryFn: async (): Promise<FavoriteRow[]> => {
-      const { data, error } = await supabase
-        .from("favorite_tools")
-        .select("id, tool_id, tools(title, slug, description)")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as unknown as FavoriteRow[];
-    },
-  });
+  }, [profile, user]);
 
   const saveName = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     setSavingName(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ display_name: displayName.trim() || null })
-      .eq("id", user.id);
-    setSavingName(false);
-    if (error) {
-      toast.error("We couldn't save your profile. Please try again.");
-      return;
+    try {
+      await updateProfileName(displayName);
+    } catch {
+      toast.error("Could not update profile name.");
+    } finally {
+      setSavingName(false);
     }
-    await refreshProfile();
-    toast.success("Profile updated.");
   };
 
   const chooseTheme = async (value: string) => {
@@ -112,67 +94,42 @@ function DashboardPage() {
     if (value === "system") localStorage.removeItem("toolnami-theme");
     else localStorage.setItem("toolnami-theme", value);
 
-    if (!user) return;
-    const { error } = await supabase
-      .from("profiles")
-      .update({ theme_preference: value })
-      .eq("id", user.id);
-    if (error) {
-      toast.error("Theme saved on this device only.");
-      return;
+    try {
+      await updateThemePreference(value);
+    } catch {
+      // Handled silently
     }
-    await refreshProfile();
-  };
-
-  const changePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword.length < 8) {
-      toast.error("New password must be at least 8 characters.");
-      return;
-    }
-    setSavingPassword(true);
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword,
-      ...(currentPassword ? { current_password: currentPassword } : {}),
-    } as Parameters<typeof supabase.auth.updateUser>[0]);
-    setSavingPassword(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    setCurrentPassword("");
-    setNewPassword("");
-    toast.success("Password updated.");
-  };
-
-  const removeFavorite = async (id: string) => {
-    const { error } = await supabase.from("favorite_tools").delete().eq("id", id);
-    if (error) {
-      toast.error("We couldn't remove that favorite.");
-      return;
-    }
-    await queryClient.invalidateQueries({ queryKey: ["favorites", user?.id] });
   };
 
   const field =
     "h-12 w-full rounded-xl border border-input bg-background px-4 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-2 focus:ring-ring/30";
   const card = "rounded-3xl border border-border bg-card p-6 shadow-soft sm:p-8";
-  const name = profile?.display_name || user?.email?.split("@")[0] || "Member";
+  const name = profile?.display_name || user?.displayName || user?.email?.split("@")[0] || "Member";
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-12 sm:px-6 lg:py-16">
       <Reveal>
         <div className="flex flex-wrap items-center gap-4">
-          <div className="inline-flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary-soft text-xl font-bold text-primary">
-            {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt={name} className="size-full object-cover" />
+          <div className="inline-flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary-soft text-xl font-bold text-primary border border-primary/20 shadow-sm">
+            {profile?.avatar_url || user?.photoURL ? (
+              <img
+                src={profile?.avatar_url || user?.photoURL || ""}
+                alt={name}
+                className="size-full object-cover"
+                referrerPolicy="no-referrer"
+              />
             ) : (
               name.slice(0, 1).toUpperCase()
             )}
           </div>
           <div className="min-w-0">
             <h1 className="truncate text-3xl font-bold tracking-tight">Hi, {name}</h1>
-            <p className="truncate text-sm text-muted-foreground">{user?.email}</p>
+            <p className="truncate text-sm text-muted-foreground flex items-center gap-2">
+              <span>{user?.email}</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                Connected via Firebase
+              </span>
+            </p>
           </div>
           <button
             type="button"
@@ -184,34 +141,27 @@ function DashboardPage() {
         </div>
       </Reveal>
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-2">
-        <Reveal>
-          <section id="profile" className={card}>
+      <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+        {/* Profile Settings */}
+        <Reveal delay={40}>
+          <section id="settings" className={card}>
             <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <UserRound className="size-[18px] text-primary" /> Profile information
+              <UserRound className="size-[18px] text-primary" /> Profile details
             </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Your display name is saved securely in your Firestore profile.
+            </p>
             <form onSubmit={saveName} className="mt-5 space-y-4">
               <div>
-                <label htmlFor="display-name" className="mb-2 block text-sm font-medium">
-                  Display name
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1.5">
+                  Display Name
                 </label>
                 <input
-                  id="display-name"
+                  type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Your name"
+                  placeholder="Your Name"
                   className={field}
-                />
-              </div>
-              <div>
-                <label htmlFor="account-email" className="mb-2 block text-sm font-medium">
-                  Email
-                </label>
-                <input
-                  id="account-email"
-                  value={user?.email ?? ""}
-                  readOnly
-                  className={`${field} cursor-not-allowed text-muted-foreground`}
                 />
               </div>
               <button
@@ -226,52 +176,14 @@ function DashboardPage() {
           </section>
         </Reveal>
 
+        {/* Theme Preferences */}
         <Reveal delay={80}>
-          <section id="settings" className={card}>
-            <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <Settings className="size-[18px] text-primary" /> Account settings
-            </h2>
-            <form onSubmit={changePassword} className="mt-5 space-y-4">
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Current password"
-                aria-label="Current password"
-                autoComplete="current-password"
-                className={field}
-              />
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="New password"
-                aria-label="New password"
-                autoComplete="new-password"
-                className={field}
-              />
-              <button
-                type="submit"
-                disabled={savingPassword}
-                className="inline-flex h-11 items-center gap-2 rounded-xl border border-border bg-background px-5 text-sm font-semibold transition-all hover:border-primary/40 hover:text-primary active:scale-95 disabled:opacity-60"
-              >
-                {savingPassword ? <Loader2 className="size-4 animate-spin" /> : null}
-                Update password
-              </button>
-              <p className="text-xs text-muted-foreground">
-                Signed in with Google? You can skip this — Google manages your password.
-              </p>
-            </form>
-          </section>
-        </Reveal>
-
-        <Reveal delay={120}>
           <section id="theme" className={card}>
             <h2 className="flex items-center gap-2 text-lg font-semibold">
               <Sun className="size-[18px] text-primary" /> Theme preferences
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Choose how ToolNami looks. Your choice is saved to your account.
+              Choose how ToolNami looks. Synced to your Firebase account.
             </p>
             <div className="mt-5 grid grid-cols-3 gap-2">
               {THEMES.map(({ value, label, Icon }) => (
@@ -293,60 +205,128 @@ function DashboardPage() {
             </div>
           </section>
         </Reveal>
+      </div>
 
-        <Reveal delay={160}>
+      {/* Saved Favorites Section */}
+      <div className="mt-8">
+        <Reveal delay={120}>
           <section id="favorites" className={card}>
-            <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <Heart className="size-[18px] text-primary" /> Saved favorites
-            </h2>
-
-            {favorites.isLoading ? (
-              <div className="mt-5 space-y-3">
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-16 animate-pulse rounded-2xl bg-muted" />
-                ))}
-              </div>
-            ) : favorites.isError ? (
-              <p className="mt-5 text-sm text-destructive">
-                We couldn't load your favorites right now.
-              </p>
-            ) : (favorites.data?.length ?? 0) === 0 ? (
-              <div className="mt-5 rounded-2xl border border-dashed border-border p-6 text-center">
-                <p className="text-sm font-medium">No favorites yet</p>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="flex items-center gap-2 text-lg font-semibold">
+                  <Heart className="size-[18px] text-rose-500 fill-rose-500" /> Saved favorites
+                </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Browse the directory and save the tools you use most.
+                  Quick access to tools you use frequently, persisted in Firestore.
+                </p>
+              </div>
+              <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-foreground">
+                {favorites.length} saved
+              </span>
+            </div>
+
+            {favorites.length === 0 ? (
+              <div className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center bg-muted/20">
+                <p className="text-sm font-medium">No favorites saved yet</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Browse through any tool and click "Favorite" to bookmark it here.
                 </p>
                 <Link
                   to="/tools"
                   search={{ page: 1 }}
-                  className="mt-4 inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:brightness-110 active:scale-95"
+                  className="mt-4 inline-flex h-10 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:brightness-110 active:scale-95"
                 >
                   Explore tools
                 </Link>
               </div>
             ) : (
-              <ul className="mt-5 space-y-3">
-                {favorites.data?.map((fav) => (
+              <ul className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {favorites.map((fav) => (
                   <li
                     key={fav.id}
-                    className="flex items-center gap-3 rounded-2xl border border-border bg-background p-4"
+                    className="group flex items-center justify-between gap-3 rounded-2xl border border-border bg-background p-4 transition-all hover:border-primary/40 hover:shadow-soft"
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold">
-                        {fav.tools?.title ?? "Untitled tool"}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {fav.tools?.description ?? ""}
-                      </p>
-                    </div>
+                    <Link
+                      to={`/tools/${fav.toolSlug}`}
+                      className="min-w-0 flex-1 flex items-center gap-2.5"
+                    >
+                      <div className="size-8 rounded-lg bg-primary-soft flex items-center justify-center text-primary shrink-0">
+                        <Wrench className="size-4" />
+                      </div>
+                      <div className="truncate">
+                        <p className="truncate text-sm font-semibold group-hover:text-primary transition-colors">
+                          {fav.toolTitle}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">Open tool →</p>
+                      </div>
+                    </Link>
                     <button
                       type="button"
-                      onClick={() => void removeFavorite(fav.id)}
+                      onClick={() => void toggleFavorite(fav.toolSlug, fav.toolTitle)}
                       aria-label="Remove favorite"
-                      className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
+                      className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
                     >
                       <Trash2 className="size-4" />
                     </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </Reveal>
+      </div>
+
+      {/* Execution History Section */}
+      <div className="mt-8">
+        <Reveal delay={160}>
+          <section id="history" className={card}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="flex items-center gap-2 text-lg font-semibold">
+                  <History className="size-[18px] text-primary" /> Tool execution history
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Recent activities processed on your account in this session and past sessions.
+                </p>
+              </div>
+              <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-foreground">
+                {history.length} logged
+              </span>
+            </div>
+
+            {history.length === 0 ? (
+              <div className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center bg-muted/20">
+                <p className="text-sm font-medium">No recent executions recorded</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Whenever you run PDF, Image, or AI generator tools, records will appear here.
+                </p>
+              </div>
+            ) : (
+              <ul className="mt-6 space-y-2.5">
+                {history.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex items-center justify-between gap-4 rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-foreground">{item.toolTitle}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(item.runAt).toLocaleDateString()} at{" "}
+                          {new Date(item.runAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">{item.summary}</p>
+                    </div>
+                    <Link
+                      to={`/tools/${item.toolSlug}`}
+                      className="text-xs font-semibold text-primary hover:underline shrink-0 flex items-center gap-1"
+                    >
+                      Run again <ExternalLink className="size-3" />
+                    </Link>
                   </li>
                 ))}
               </ul>

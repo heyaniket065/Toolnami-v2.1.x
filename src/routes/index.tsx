@@ -16,15 +16,34 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "ToolNami is a clean, fast platform of free online tools: merge PDFs, compress images, convert units, format code and more — no installs, no clutter.",
+          "ToolNami is a clean, fast platform of free online tools: merge PDFs, compress images, convert units, format code, and more — no installs, no clutter.",
       },
-      { property: "og:title", content: "ToolNami — Fast, Free Online Tools" },
+      {
+        name: "robots",
+        content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      },
+      { property: "og:site_name", content: "ToolNami" },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://toolnami.com/" },
+      { property: "og:title", content: "ToolNami — Fast, Free Online Tools for Everyday Work" },
       {
         property: "og:description",
         content:
-          "One bright, uncluttered home for the everyday tools you keep searching for. Free and browser-based.",
+          "One bright, uncluttered home for the everyday tools you keep searching for. 100% free, fast, and browser-based.",
       },
+      { property: "og:image", content: "/assets/tools/3d-pdf-compressor.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:site", content: "@Instgram136" },
+      { name: "twitter:creator", content: "@Instgram136" },
+      { name: "twitter:title", content: "ToolNami — Fast, Free Online Tools for Everyday Work" },
+      {
+        name: "twitter:description",
+        content:
+          "One bright, uncluttered home for the everyday tools you keep searching for. 100% free, fast, and browser-based.",
+      },
+      { name: "twitter:image", content: "/assets/tools/3d-pdf-compressor.png" },
     ],
+    links: [{ rel: "canonical", href: "https://toolnami.com/" }],
   }),
   component: Home,
 });
@@ -87,18 +106,24 @@ function Home() {
           <Reveal delay={200}>
             <form
               onSubmit={search}
+              role="search"
+              aria-label="Sitewide tool search"
               className="mx-auto mt-9 flex w-full max-w-xl items-center gap-2 rounded-2xl border border-border bg-card p-2 shadow-soft transition-all focus-within:border-primary/40 focus-within:shadow-lift"
             >
-              <Search className="ml-2 size-5 shrink-0 text-muted-foreground" />
+              <label htmlFor="home-search-input" className="sr-only">
+                Search tools
+              </label>
+              <Search className="ml-2 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
               <input
+                id="home-search-input"
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
                 placeholder="What do you need to do today?"
-                aria-label="Search tools"
                 className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground sm:text-base"
               />
               <button
                 type="submit"
+                aria-label="Submit search query"
                 className="inline-flex h-11 shrink-0 items-center rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-95 sm:px-5"
               >
                 Search

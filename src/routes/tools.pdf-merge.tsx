@@ -1,34 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowDown, ArrowUp, Download, FileText, Loader2, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { ArrowDown, ArrowUp, FileText, Plus, Trash2 } from "lucide-react";
+import { useState, useMemo } from "react";
 
 import { FileDrop, ToolAlert } from "@/components/tools/file-drop";
-import { ToolShell, toolJsonLd, type ToolFaq } from "@/components/tools/tool-shell";
+import { ToolShell, toolJsonLd } from "@/components/tools/tool-shell";
+import { ToolProcessingState } from "@/components/tools/tool-processing-state";
 import { downloadBlob, formatBytes } from "@/lib/tool-files";
+import { findLiveTool, getDynamicUses } from "@/lib/phase1-tools";
 
-const TITLE = "PDF Merge";
-const DESC = "Combine multiple PDF files into a single document — free, instant and private.";
+const TOOL_DATA = findLiveTool("pdf-merge");
+const TITLE = TOOL_DATA.title;
+const DESC = TOOL_DATA.description;
 const URL = "https://toolnami.lovable.app/tools/pdf-merge";
-
-const FAQS: ToolFaq[] = [
-  {
-    q: "How many PDFs can I merge at once?",
-    a: "As many as your device's memory allows. Most people merge a handful of files, but dozens work fine.",
-  },
-  {
-    q: "Can I change the order of the files?",
-    a: "Yes. Use the up and down arrows next to each file to arrange them before merging.",
-  },
-  {
-    q: "Are my files uploaded anywhere?",
-    a: "No. The merge happens locally in your browser, so your documents never leave your device.",
-  },
-  {
-    q: "Will bookmarks and form fields survive?",
-    a: "Page content, text and images are preserved. Some interactive extras such as bookmarks and form fields may be dropped during the merge.",
-  },
-  { q: "Is it really free?", a: "Yes — unlimited merges, no account, no watermark." },
-];
+const FAQS = TOOL_DATA.faqs;
 
 export const Route = createFileRoute("/tools/pdf-merge")({
   head: () => ({
@@ -55,6 +39,8 @@ function PdfMergePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [merged, setMerged] = useState<Blob | null>(null);
+
+  const dynamicUses = useMemo(() => getDynamicUses(TOOL_DATA.baseUses), []);
 
   const add = (incoming: File[]) => {
     const pdfs = incoming.filter(
@@ -85,7 +71,7 @@ function PdfMergePage() {
 
   const merge = async () => {
     if (files.length < 2) {
-      setError("Add at least two PDFs to merge.");
+      setError("Please add at least two PDF documents to merge.");
       return;
     }
     setBusy(true);
@@ -103,24 +89,30 @@ function PdfMergePage() {
       setMerged(new Blob([bytes as unknown as BlobPart], { type: "application/pdf" }));
     } catch {
       setError(
-        "We couldn't merge those files. One of them may be corrupted or password-protected.",
+        "We couldn't merge those files. One of them may be password-protected or corrupted. Please verify the files.",
       );
     } finally {
       setBusy(false);
     }
   };
 
+  const resetAll = () => {
+    setFiles([]);
+    setMerged(null);
+    setError(null);
+  };
+
   return (
     <ToolShell
       title={TITLE}
       tagline="Bring several PDFs together into one tidy document, in exactly the order you want."
-      categoryLabel="PDF Tools"
+      categoryLabel={TOOL_DATA.categoryLabel}
+      thumbnail={TOOL_DATA.image}
+      badge={TOOL_DATA.badge}
+      dynamicUses={dynamicUses}
+      relatedSlugs={TOOL_DATA.relatedSlugs}
       about="ToolNami's PDF Merge copies every page from each file you add into a single new document, keeping page size, text and images intact. You control the order before merging, and the whole operation happens in your browser so nothing is uploaded."
-      steps={[
-        "Add two or more PDF files.",
-        "Reorder them with the arrows until the sequence is right.",
-        "Press Merge PDFs, then download the combined document.",
-      ]}
+      steps={TOOL_DATA.howToSteps}
       benefits={[
         {
           title: "Full order control",
@@ -141,15 +133,8 @@ function PdfMergePage() {
         { title: "Free forever", body: "No account, no watermark, no daily cap." },
         { title: "Mobile ready", body: "Works just as well on a phone as on a laptop." },
       ]}
-      faqs={FAQS}
-      seo={{
-        heading: "Merge PDF files online without uploading them",
-        paragraphs: [
-          "Combining PDFs is one of those tasks that shows up constantly: signed contract pages, scanned receipts, coursework submissions, tender documents and multi-part reports all need to arrive as one file.",
-          "ToolNami's merge tool copies pages between documents using the open-source pdf-lib library, preserving each page's original dimensions and content. You decide the order, so a cover letter can lead and appendices can follow.",
-          "Because the merge runs entirely in your browser, sensitive paperwork stays on your device. There is nothing to delete afterwards and no upload history to worry about.",
-        ],
-      }}
+      faqs={TOOL_DATA.faqs}
+      seo={TOOL_DATA.seoArticle}
     >
       <div className="space-y-4">
         {files.length === 0 ? (
@@ -210,50 +195,68 @@ function PdfMergePage() {
               ))}
             </ul>
 
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary">
-              <Plus className="size-4" /> Add more PDFs
-              <input
-                type="file"
-                accept="application/pdf,.pdf"
-                multiple
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files) add(Array.from(e.target.files));
-                  e.target.value = "";
-                }}
-              />
-            </label>
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary">
+                <Plus className="size-4" /> Add more PDFs
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files) add(Array.from(e.target.files));
+                    e.target.value = "";
+                  }}
+                />
+              </label>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
-                onClick={merge}
-                disabled={busy}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-95 disabled:opacity-60"
+                onClick={resetAll}
+                className="text-xs font-semibold text-muted-foreground hover:text-destructive transition-colors"
               >
-                {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-                {busy ? "Merging…" : `Merge ${files.length} PDFs`}
+                Clear all files
               </button>
-              {merged ? (
-                <button
-                  type="button"
-                  onClick={() => downloadBlob(merged, "toolnami-merged.pdf")}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground transition-all hover:-translate-y-0.5 active:scale-95"
-                >
-                  <Download className="size-4" /> Download merged PDF
-                </button>
-              ) : null}
             </div>
 
-            {merged ? (
-              <ToolAlert tone="success">
-                Merged successfully — {formatBytes(merged.size)} ready to download.
-              </ToolAlert>
+            {!busy && !merged && !error ? (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={merge}
+                  disabled={files.length < 2}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:brightness-110 active:scale-95 disabled:opacity-60"
+                >
+                  Merge {files.length} PDFs into One Document
+                </button>
+              </div>
             ) : null}
+
+            {/* Processing, Success, and Error States */}
+            <ToolProcessingState
+              isProcessing={busy}
+              processingMessage="Combining and sequencing all pages into single PDF…"
+              isSuccess={!!merged}
+              successTitle="PDFs Merged Successfully!"
+              successSubtitle={
+                merged
+                  ? `Unified document created (${formatBytes(merged.size)}) containing all pages in selected order.`
+                  : undefined
+              }
+              downloadLabel="Download Merged PDF"
+              onDownload={() => {
+                if (merged) {
+                  downloadBlob(merged, "toolnami-merged.pdf");
+                }
+              }}
+              error={error}
+              onRetry={merge}
+              onReset={resetAll}
+            />
           </>
         )}
 
-        {error ? <ToolAlert>{error}</ToolAlert> : null}
+        {error && files.length === 0 ? <ToolAlert>{error}</ToolAlert> : null}
       </div>
     </ToolShell>
   );

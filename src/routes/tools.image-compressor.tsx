@@ -1,37 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, ImageIcon, Loader2, RotateCcw } from "lucide-react";
-import { useState } from "react";
+import { ImageIcon, RotateCcw } from "lucide-react";
+import { useState, useMemo } from "react";
 
 import { FileDrop, ToolAlert } from "@/components/tools/file-drop";
-import { ToolShell, toolJsonLd, type ToolFaq } from "@/components/tools/tool-shell";
+import { ToolShell, toolJsonLd } from "@/components/tools/tool-shell";
+import { ToolProcessingState } from "@/components/tools/tool-processing-state";
 import { downloadBlob, formatBytes, savingsLabel, stripExtension } from "@/lib/tool-files";
+import { findLiveTool, getDynamicUses } from "@/lib/phase1-tools";
 
-const TITLE = "Image Compressor";
-const DESC = "Compress images without noticeable quality loss — free, instant and private.";
+const TOOL_DATA = findLiveTool("image-compressor");
+const TITLE = TOOL_DATA.title;
+const DESC = TOOL_DATA.description;
 const URL = "https://toolnami.lovable.app/tools/image-compressor";
-
-const FAQS: ToolFaq[] = [
-  {
-    q: "Which formats are supported?",
-    a: "JPG, JPEG, PNG and WebP. The compressed result is returned in a web-friendly format at high visual quality.",
-  },
-  {
-    q: "Will my photo look worse?",
-    a: "Compression is tuned so differences are hard to spot at normal viewing size. You can lower the target size further if you need a smaller file.",
-  },
-  {
-    q: "Are my images uploaded?",
-    a: "Never. Compression uses your browser's own canvas engine, so images stay on your device.",
-  },
-  {
-    q: "Can I compress several images at once?",
-    a: "This version handles one image at a time so you can check each result. Batch compression is on the roadmap.",
-  },
-  {
-    q: "Does it strip EXIF data?",
-    a: "Yes — location and camera metadata are dropped during re-encoding, which is usually a privacy win.",
-  },
-];
+const FAQS = TOOL_DATA.faqs;
 
 export const Route = createFileRoute("/tools/image-compressor")({
   head: () => ({
@@ -54,9 +35,9 @@ export const Route = createFileRoute("/tools/image-compressor")({
 });
 
 const TARGETS = [
-  { label: "Light", mb: 1.5 },
-  { label: "Balanced", mb: 0.6 },
-  { label: "Maximum", mb: 0.2 },
+  { label: "Light (1.5 MB)", mb: 1.5 },
+  { label: "Balanced (600 KB)", mb: 0.6 },
+  { label: "Maximum (200 KB)", mb: 0.2 },
 ];
 
 function ImageCompressorPage() {
@@ -65,6 +46,8 @@ function ImageCompressorPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ blob: Blob; url: string } | null>(null);
+
+  const dynamicUses = useMemo(() => getDynamicUses(TOOL_DATA.baseUses), []);
 
   const reset = () => {
     setFile(null);
@@ -88,7 +71,9 @@ function ImageCompressorPage() {
       });
       setResult({ blob: out, url: URL_from(out) });
     } catch {
-      setError("We couldn't compress that image. Please try a different file.");
+      setError(
+        "We couldn't compress that image. The file may be corrupt or unreadable. Please try a different image.",
+      );
     } finally {
       setBusy(false);
     }
@@ -98,13 +83,13 @@ function ImageCompressorPage() {
     <ToolShell
       title={TITLE}
       tagline="Make photos and graphics dramatically lighter while keeping them looking sharp."
-      categoryLabel="Image Tools"
+      categoryLabel={TOOL_DATA.categoryLabel}
+      thumbnail={TOOL_DATA.image}
+      badge={TOOL_DATA.badge}
+      dynamicUses={dynamicUses}
+      relatedSlugs={TOOL_DATA.relatedSlugs}
       about="The ToolNami Image Compressor re-encodes your picture at an optimised quality level and, when needed, gently reduces oversized dimensions. It uses your browser's own image pipeline in a background worker, so large photos compress quickly without freezing the page and without ever being uploaded."
-      steps={[
-        "Choose or drag in a JPG, PNG or WebP image.",
-        "Pick how aggressively you want to compress it.",
-        "Press Compress Image, review the preview, then download.",
-      ]}
+      steps={TOOL_DATA.howToSteps}
       benefits={[
         {
           title: "Faster websites",
@@ -128,15 +113,8 @@ function ImageCompressorPage() {
         },
         { title: "Free and unlimited", body: "No signup, no watermark, no daily quota." },
       ]}
-      faqs={FAQS}
-      seo={{
-        heading: "Compress images online for free, privately",
-        paragraphs: [
-          "Oversized images are the single biggest cause of slow web pages and rejected uploads. A modern phone photo can easily be 6–10 MB, when 300 KB would look identical on screen.",
-          "ToolNami's compressor re-encodes your image with an optimised quality curve and caps very large dimensions, so you get a file that is a fraction of the original size but still looks clean on retina displays.",
-          "It's ideal for product photos, blog images, portfolio galleries, CV attachments and marketplace listings. Everything runs client-side, so your personal photos are never sent to a server or stored anywhere.",
-        ],
-      }}
+      faqs={TOOL_DATA.faqs}
+      seo={TOOL_DATA.seoArticle}
     >
       {!file ? (
         <FileDrop
@@ -147,7 +125,7 @@ function ImageCompressorPage() {
             const f = files[0];
             if (!f) return;
             if (!f.type.startsWith("image/")) {
-              setError("Please choose an image file.");
+              setError("Please choose a valid image file (JPG, PNG, or WebP).");
               return;
             }
             setError(null);
@@ -176,7 +154,7 @@ function ImageCompressorPage() {
 
           <div>
             <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Compression level
+              Compression strength target
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {TARGETS.map((t, i) => (
@@ -187,7 +165,7 @@ function ImageCompressorPage() {
                     setPreset(i);
                     setResult(null);
                   }}
-                  className={`rounded-full border px-4 py-2 text-sm font-medium transition-all ${
+                  className={`rounded-full border px-4 py-2 text-xs font-semibold transition-all ${
                     preset === i
                       ? "border-primary bg-primary text-primary-foreground shadow-soft"
                       : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-primary"
@@ -199,47 +177,55 @@ function ImageCompressorPage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={compress}
-              disabled={busy}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 active:scale-95 disabled:opacity-60"
-            >
-              {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-              {busy ? "Compressing…" : "Compress Image"}
-            </button>
-            {result ? (
+          {!busy && !result && !error ? (
+            <div className="pt-2">
               <button
                 type="button"
-                onClick={() =>
-                  downloadBlob(result.blob, `${stripExtension(file.name)}-compressed.jpg`)
-                }
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground transition-all hover:-translate-y-0.5 active:scale-95"
+                onClick={compress}
+                disabled={busy}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:brightness-110 active:scale-95 disabled:opacity-60"
               >
-                <Download className="size-4" /> Download image
+                Compress Image Now
               </button>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
 
           {result ? (
-            <>
+            <div className="overflow-hidden rounded-2xl border border-border bg-background/50 p-2">
               <img
                 src={result.url}
                 alt="Compressed preview"
                 loading="lazy"
-                className="max-h-72 w-full rounded-2xl border border-border object-contain"
+                className="max-h-72 w-full rounded-xl object-contain"
               />
-              <ToolAlert tone="success">
-                Done — {formatBytes(file.size)} → {formatBytes(result.blob.size)} (
-                {savingsLabel(file.size, result.blob.size)}).
-              </ToolAlert>
-            </>
+            </div>
           ) : null}
+
+          {/* Processing, Success, and Error States */}
+          <ToolProcessingState
+            isProcessing={busy}
+            processingMessage="Compressing pixel matrices and stripping redundant EXIF headers…"
+            isSuccess={!!result}
+            successTitle="Image Compressed Successfully!"
+            successSubtitle={
+              result
+                ? `Reduced from ${formatBytes(file.size)} to ${formatBytes(result.blob.size)} (${savingsLabel(file.size, result.blob.size)} savings).`
+                : undefined
+            }
+            downloadLabel="Download Compressed Image"
+            onDownload={() => {
+              if (result && file) {
+                downloadBlob(result.blob, `${stripExtension(file.name)}-compressed.jpg`);
+              }
+            }}
+            error={error}
+            onRetry={compress}
+            onReset={reset}
+          />
         </div>
       )}
 
-      {error ? <ToolAlert>{error}</ToolAlert> : null}
+      {error && !file ? <ToolAlert>{error}</ToolAlert> : null}
     </ToolShell>
   );
 }

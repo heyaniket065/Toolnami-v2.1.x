@@ -12,12 +12,30 @@ export const Route = createFileRoute("/about")({
         content:
           "ToolNami is an independent online tools platform by Aniket Bhalerao (LuminaLM), built to make everyday digital tasks fast, free and privacy-friendly.",
       },
-      { property: "og:title", content: "About ToolNami" },
+      {
+        name: "robots",
+        content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      },
+      { property: "og:site_name", content: "ToolNami" },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://toolnami.com/about" },
+      { property: "og:title", content: "About ToolNami — Simple Tools, Seriously Built" },
       {
         property: "og:description",
         content: "The story and purpose behind ToolNami's growing library of free online tools.",
       },
+      { property: "og:image", content: "/assets/tools/3d-pdf-compressor.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:site", content: "@Instgram136" },
+      { name: "twitter:creator", content: "@Instgram136" },
+      { name: "twitter:title", content: "About ToolNami — Simple Tools, Seriously Built" },
+      {
+        name: "twitter:description",
+        content: "The story and purpose behind ToolNami's growing library of free online tools.",
+      },
+      { name: "twitter:image", content: "/assets/tools/3d-pdf-compressor.png" },
     ],
+    links: [{ rel: "canonical", href: "https://toolnami.com/about" }],
   }),
   component: AboutPage,
 });
@@ -82,14 +100,25 @@ function AboutPage() {
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
-        <div className="grid gap-6 sm:grid-cols-2">
+        <Reveal>
+          <div className="max-w-xl">
+            <span className="text-xs font-bold uppercase tracking-wider text-primary">
+              Foundations
+            </span>
+            <h2 className="mt-1 text-2xl font-bold sm:text-3xl">Our core principles</h2>
+            <p className="mt-2 text-sm text-muted-foreground sm:text-base">
+              The values that dictate how every tool in ToolNami is designed and engineered.
+            </p>
+          </div>
+        </Reveal>
+        <div className="mt-8 grid gap-6 sm:grid-cols-2">
           {VALUES.map(({ Icon, title, body }, i) => (
             <Reveal key={title} delay={i * 70}>
               <article className="h-full rounded-2xl border border-border bg-card p-6 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lift">
                 <span className="inline-flex size-11 items-center justify-center rounded-xl bg-primary-soft text-primary">
                   <Icon className="size-5" />
                 </span>
-                <h2 className="mt-4 text-lg font-semibold">{title}</h2>
+                <h3 className="mt-4 text-lg font-semibold">{title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{body}</p>
               </article>
             </Reveal>
