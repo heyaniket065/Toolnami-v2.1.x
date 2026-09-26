@@ -241,7 +241,7 @@ export const COMPLETE_TOOLS: CompleteTool[] = [
       },
     ],
     badge: { label: "Top", icon: "🔄", tone: "top" },
-    image: "/assets/tools/pdf-converter.png",
+    image: "/assets/tools/pdf-converter.jpg",
     baseUses: 21300,
     isFeatured: false,
     keywords: [
@@ -282,7 +282,7 @@ export const COMPLETE_TOOLS: CompleteTool[] = [
       },
     ],
     badge: { label: "Trending", icon: "🖼️", tone: "trending" },
-    image: "/assets/tools/pdf-to-jpg.png",
+    image: "/assets/tools/pdf-to-jpg.jpg",
     baseUses: 26100,
     isFeatured: false,
     keywords: ["pdf to jpg", "convert pdf to image", "pdf to jpeg", "extract pdf images"],
