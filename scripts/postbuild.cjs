@@ -1,15 +1,15 @@
 const fs = require("fs");
 const path = require("path");
 
-// 1. Ensure dist exists and has public assets
+// 1. Ensure dist/client exists and has public assets
 const outputPublic = path.join(__dirname, "..", ".output", "public");
-const dist = path.join(__dirname, "..", "dist");
+const dist = path.join(__dirname, "..", "dist", "client");
 if (fs.existsSync(outputPublic)) {
   fs.mkdirSync(dist, { recursive: true });
   fs.cpSync(outputPublic, dist, { recursive: true });
 }
 
-// 2. Ensure dist/index.html exists as a valid HTML fallback
+// 2. Ensure dist/client/index.html exists as a valid HTML fallback
 const indexHtmlPath = path.join(dist, "index.html");
 if (!fs.existsSync(indexHtmlPath)) {
   const fallbackHtml = `<!DOCTYPE html>
