@@ -20,6 +20,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as ToolsIndexRouteImport } from './routes/tools.index'
+import { Route as ToolsSlugRouteImport } from './routes/tools.$slug'
 import { Route as ToolsImageCompressorRouteImport } from './routes/tools.image-compressor'
 import { Route as ToolsJpgToPdfRouteImport } from './routes/tools.jpg-to-pdf'
 import { Route as ToolsPdfCompressorRouteImport } from './routes/tools.pdf-compressor'
@@ -80,6 +81,11 @@ const ToolsIndexRoute = ToolsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ToolsRoute,
 } as any)
+const ToolsSlugRoute = ToolsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => ToolsRoute,
+} as any)
 const ToolsImageCompressorRoute = ToolsImageCompressorRouteImport.update({
   id: '/image-compressor',
   path: '/image-compressor',
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/tools/$slug': typeof ToolsSlugRoute
   '/tools/image-compressor': typeof ToolsImageCompressorRoute
   '/tools/jpg-to-pdf': typeof ToolsJpgToPdfRoute
   '/tools/pdf-compressor': typeof ToolsPdfCompressorRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/tools/$slug': typeof ToolsSlugRoute
   '/tools/image-compressor': typeof ToolsImageCompressorRoute
   '/tools/jpg-to-pdf': typeof ToolsJpgToPdfRoute
   '/tools/pdf-compressor': typeof ToolsPdfCompressorRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/tools/$slug': typeof ToolsSlugRoute
   '/tools/image-compressor': typeof ToolsImageCompressorRoute
   '/tools/jpg-to-pdf': typeof ToolsJpgToPdfRoute
   '/tools/pdf-compressor': typeof ToolsPdfCompressorRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/tools'
     | '/dashboard'
+    | '/tools/$slug'
     | '/tools/image-compressor'
     | '/tools/jpg-to-pdf'
     | '/tools/pdf-compressor'
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/terms'
     | '/dashboard'
+    | '/tools/$slug'
     | '/tools/image-compressor'
     | '/tools/jpg-to-pdf'
     | '/tools/pdf-compressor'
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/tools'
     | '/_authenticated/dashboard'
+    | '/tools/$slug'
     | '/tools/image-compressor'
     | '/tools/jpg-to-pdf'
     | '/tools/pdf-compressor'
@@ -303,6 +315,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsIndexRouteImport
       parentRoute: typeof ToolsRoute
     }
+    '/tools/$slug': {
+      id: '/tools/$slug'
+      path: '/$slug'
+      fullPath: '/tools/$slug'
+      preLoaderRoute: typeof ToolsSlugRouteImport
+      parentRoute: typeof ToolsRoute
+    }
     '/tools/image-compressor': {
       id: '/tools/image-compressor'
       path: '/image-compressor'
@@ -353,6 +372,7 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface ToolsRouteChildren {
+  ToolsSlugRoute: typeof ToolsSlugRoute
   ToolsImageCompressorRoute: typeof ToolsImageCompressorRoute
   ToolsJpgToPdfRoute: typeof ToolsJpgToPdfRoute
   ToolsPdfCompressorRoute: typeof ToolsPdfCompressorRoute
@@ -362,6 +382,7 @@ interface ToolsRouteChildren {
 }
 
 const ToolsRouteChildren: ToolsRouteChildren = {
+  ToolsSlugRoute: ToolsSlugRoute,
   ToolsImageCompressorRoute: ToolsImageCompressorRoute,
   ToolsJpgToPdfRoute: ToolsJpgToPdfRoute,
   ToolsPdfCompressorRoute: ToolsPdfCompressorRoute,
