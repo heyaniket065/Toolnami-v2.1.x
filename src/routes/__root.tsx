@@ -13,7 +13,6 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
-import { WelcomeModal } from "@/components/site/welcome-modal";
 import { AiAssistant } from "@/components/ai-assistant";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -237,8 +236,7 @@ function RootComponent() {
           </main>
           <Footer />
         </div>
-        <WelcomeModal />
-        <AiAssistant />
+              <AiAssistant />
         <Toaster position="top-center" richColors />
       </AuthProvider>
     </QueryClientProvider>
