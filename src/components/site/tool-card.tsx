@@ -29,6 +29,23 @@ export function ToolCard({ tool, category }: { tool: Tool; category?: ToolCatego
     `/assets/tools/${tool.slug}.png`;
 
   const [imgSrc, setImgSrc] = useState<string>(initialImage);
+  const fallbackImage = `/assets/tools/${
+    tool.category_id === "pdf"
+      ? "3d-pdf-compressor"
+      : tool.category_id === "image"
+        ? "image-converter"
+        : tool.category_id === "ai"
+          ? "ai-content-writer"
+          : tool.category_id === "calculator"
+            ? "age-calculator"
+            : tool.category_id === "text"
+              ? "text-formatter"
+              : tool.category_id === "developer"
+                ? "json-formatter"
+                : tool.category_id === "seo"
+                  ? "meta-tag-generator"
+                  : "unit-converter"
+  }.png`;
 
   const { formatted: usageCount, hasIncremented } = useToolUsage(
     completeTool?.baseUses || tool.views || 18000,
@@ -51,8 +68,8 @@ export function ToolCard({ tool, category }: { tool: Tool; category?: ToolCatego
           src={imgSrc}
           alt={tool.title}
           onError={() => {
-            if (imgSrc !== "/assets/tools/3d-image-compressor.png") {
-              setImgSrc("/assets/tools/3d-image-compressor.png");
+            if (imgSrc !== fallbackImage) {
+              setImgSrc(fallbackImage);
             }
           }}
           className="w-full h-full object-cover block transition-transform duration-300 group-hover:scale-105"
