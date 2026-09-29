@@ -29,6 +29,7 @@ export function LiveToolCard({ tool }: { tool: LiveTool }) {
           src={tool.image}
           alt={`${tool.title} — ${tool.description}`}
           loading="lazy"
+          decoding="async"
           referrerPolicy="no-referrer"
           width={1200}
           height={750}

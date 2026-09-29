@@ -1,32 +1,60 @@
 import { Link } from "@tanstack/react-router";
 
-export function Logo({ className = "" }: { className?: string }) {
+export function Logo({
+  className = "",
+  size = "md",
+  showText = true,
+}: {
+  className?: string;
+  size?: "sm" | "md" | "lg";
+  showText?: boolean;
+}) {
+  const sizeClasses = {
+    sm: "size-8",
+    md: "size-9 sm:size-10",
+    lg: "size-12",
+  }[size];
+
+  const imgPx = {
+    sm: 32,
+    md: 40,
+    lg: 48,
+  }[size];
+
   return (
     <Link
       to="/"
-      className={`group inline-flex items-center gap-2.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${className}`}
-      aria-label="ToolNami home"
+      className={`group inline-flex items-center gap-3 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${className}`}
+      aria-label="ToolNami home — fast free online utilities"
     >
-      <span className="relative flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-soft transition-transform duration-300 group-hover:-rotate-6">
-        <svg viewBox="0 0 24 24" className="size-5" fill="none" aria-hidden="true">
-          <path
-            d="M2 16c2.6 0 3.4-3 6-3s3.4 3 6 3 3.4-3 6-3"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
+      <div className="relative shrink-0">
+        {/* Luminous Neon Ring Glow on hover */}
+        <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-600 opacity-60 blur-xs transition-opacity duration-300 group-hover:opacity-100 animate-pulse" />
+
+        {/* Circular Badge: Anime character with black hair & cigarette set against 3D blue T emblem */}
+        <div
+          className={`relative overflow-hidden rounded-full border-2 border-cyan-400/80 bg-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.45)] transition-transform duration-300 group-hover:scale-105 ${sizeClasses}`}
+        >
+          <img
+            src="/logo.png"
+            srcSet="/logo.png 1x, /logo-1024.png 2x"
+            alt="ToolNami 3D Anime Emblem Logo"
+            width={imgPx}
+            height={imgPx}
+            decoding="async"
+            className="size-full object-cover block"
           />
-          <path
-            d="M6 9.5c1.8-4 5.4-5.5 9-4.5"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-          />
-        </svg>
-        <span className="absolute -top-1 -right-1 size-2.5 rounded-full bg-accent" />
-      </span>
-      <span className="font-display text-lg font-bold tracking-tight">
-        Tool<span className="text-primary">Nami</span>
-      </span>
+        </div>
+      </div>
+
+      {showText && (
+        <span className="font-display text-xl font-extrabold tracking-tight text-foreground transition-colors group-hover:text-primary">
+          Tool
+          <span className="bg-gradient-to-r from-sky-400 to-primary bg-clip-text text-transparent">
+            Nami
+          </span>
+        </span>
+      )}
     </Link>
   );
 }

@@ -1,0 +1,84 @@
+# ToolNami
+
+> Fast, free, privacy-first online tools for everyday productivity — PDF, image, text, SEO, calculators, and developer utilities.
+
+ToolNami (https://toolnami.com / https://toolnami.ai.studio) is a high-performance web utility suite architected by Aniket Bhalerao (LuminaLM Innovations). The platform hosts over 80 client-side and server-assisted browser utilities. Files and sensitive inputs are processed in-memory or using WebAssembly/client-side algorithms, guaranteeing zero persistent retention and complete user privacy.
+
+## Platform Metadata
+- Platform Name: ToolNami
+- Publisher / Parent: LuminaLM Innovations
+- Founder & Chief Architect: Aniket Bhalerao
+- Headquarters: Pune, Maharashtra, India
+- Official Contact: support.neoluxetrust@gmail.com
+- Phone: +91 98765 43210
+- Primary Domain: https://toolnami.com
+- Cloud Deployment: https://toolnami.ai.studio
+
+## Capabilities & Tool Categories
+
+### 1. PDF Utilities (/tools?category=pdf)
+- Image to PDF (/tools/jpg-to-pdf): Convert PNG, JPG, WebP images into a single formatted PDF document.
+- PDF Compressor (/tools/pdf-compressor): Reduce PDF file sizes while retaining text sharpness and vector graphics.
+- PDF Merger (/tools/pdf-merge): Combine multiple PDF documents into a single sequential PDF.
+- PDF Splitter (/tools/pdf-split): Extract specific page ranges or burst all pages into discrete documents.
+- PDF to JPG Converter (/tools/pdf-to-jpg): Render PDF pages to high-resolution raster images.
+- PDF Rotator (/tools/pdf-rotate): Rotate individual pages or whole documents by 90, 180, or 270 degrees.
+- PDF Watermark (/tools/pdf-watermark): Overlay custom text or stamp graphics on PDF files.
+- PDF Password Protection (/tools/pdf-protect): Encrypt PDF documents with standard security keys.
+- PDF Text Extractor (/tools/pdf-to-text): Parse and extract searchable text streams from PDF pages.
+
+### 2. Image Optimization & Editing (/tools?category=image)
+- Image Compressor (/tools/image-compressor): Client-side lossy and lossless image compression with customizable KB/MB targets.
+- Image Size Reducer (/tools/image-size-reducer): Downscale pixel dimensions and payload size.
+- Image Resizer (/tools/image-resizer): Proportionally resize photos to custom width and height.
+- Background Remover (/tools/background-remover): Isolate foreground subjects with edge refinement.
+- Image Converter (/tools/image-converter): Format transcode between PNG, JPG, WebP, SVG, and AVIF.
+- SVG to PNG (/tools/svg-to-png): Rasterize vector graphics to crisp high-DPI bitmaps.
+- Image Cropper (/tools/image-cropper): Aspect-ratio locked cropping for social media headers.
+- Watermark Tool (/tools/image-watermark): Brand images with copyright text and logos.
+
+### 3. Developer & Cryptographic Tools (/tools?category=developer)
+- QR Code Generator (/tools/qr-code-generator): Dynamic QR code generator supporting URLs, Wi-Fi keys, vCards, and text.
+- JSON Formatter & Validator (/tools/json-formatter): Format, indent, minify, and inspect JSON payloads.
+- JSON to CSV Converter (/tools/json-to-csv): Transform nested structures into tabular data.
+- Base64 Encoder & Decoder (/tools/base64-encode): Safe binary and string Base64 transformation.
+- Hash Generator (/tools/hash-generator): Cryptographic hashing via SHA-256, SHA-512, and MD5 algorithms.
+- UUID Generator (/tools/uuid-generator): RFC 4122 compliant v4 UUID batch generation.
+- Regex Tester (/tools/regex-tester): Interactive regular expression testing with group capture inspection.
+- CSS & JS Minifiers (/tools/css-minifier, /tools/javascript-minifier): Remove whitespace, comments, and boilerplate for web optimization.
+
+### 4. Text & Content Processing (/tools?category=text)
+- Word & Character Counter (/tools/word-counter): Real-time metrics including reading time, speaking pace, word and character counts.
+- Case Converter (/tools/case-converter): UPPERCASE, lowercase, Title Case, camelCase, snake_case, and kebab-case transformations.
+- Text Cleaner (/tools/text-cleaner): Strip zero-width spaces, special characters, and normalize unicode.
+- Find & Replace (/tools/find-replace): Global text search with match highlighting and case sensitivity controls.
+- Remove Duplicate Lines (/tools/remove-duplicate-lines): Deduplicate lists while preserving order.
+
+### 5. SEO & Webmaster Utilities (/tools?category=seo)
+- Meta Tag Generator (/tools/meta-tag-generator): Output Google, OpenGraph, and Twitter card tags.
+- Sitemap Generator (/tools/sitemap-generator): Build XML sitemaps following sitemaps.org standards.
+- Robots.txt Builder (/tools/robots-txt-generator): Configure crawler access rules for search engines.
+- Keyword Density Checker (/tools/keyword-density-checker): Analyze keyword ratios to avoid over-optimization penalties.
+
+### 6. Calculators & Financial Tools (/tools?category=calculator)
+- GST Calculator (/tools/gst-calculator): Calculate inclusive and exclusive tax amounts for business transactions.
+- Loan EMI Calculator (/tools/loan-emi-calculator): Monthly breakdown of interest and principal amortizations.
+- Discount Calculator (/tools/discount-calculator): Determine sale savings, markdowns, and final prices.
+- Age Calculator (/tools/age-calculator): Exact age calculations in years, months, days, and seconds.
+- BMI Calculator (/tools/bmi-calculator): Body mass index and health category estimations.
+- Percentage Calculator (/tools/percentage-calculator): Percentage changes, discounts, and fractions.
+
+### 7. AI Writing & Creative Tools (/tools?category=ai)
+- AI Content Writer (/tools/ai-content-writer): Generate blog drafts, emails, and technical documentation.
+- AI Title & Caption Generator (/tools/ai-title-generator, /tools/ai-caption-generator): Catchy social captions and SEO titles.
+- AI Hashtag Generator (/tools/ai-hashtag-generator): Niche and trending hashtags for audience reach.
+
+## API Endpoints
+- POST /api/chat: Server-side AI assistant proxy powered by Gemini models for natural-language tool discovery.
+
+## Verified Social Channels
+- YouTube: https://youtube.com/@luminalM065
+- Instagram: https://www.instagram.com/hey_anik_et_065
+- LinkedIn: https://www.linkedin.com/in/aniket-bhalerao-007
+- X / Twitter: https://x.com/aniketbhalerao
+- GitHub: https://github.com/heyaniket065

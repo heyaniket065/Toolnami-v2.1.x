@@ -759,6 +759,7 @@ export function SvgToPngTool() {
 
   useEffect(() => {
     if (!svgText) setSvgText(sampleSvg);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFileUpload = async (f: File) => {

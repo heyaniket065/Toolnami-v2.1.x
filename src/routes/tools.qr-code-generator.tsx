@@ -11,7 +11,7 @@ import { findLiveTool, getDynamicUses } from "@/lib/phase1-tools";
 const TOOL_DATA = findLiveTool("qr-code-generator");
 const TITLE = TOOL_DATA.title;
 const DESC = TOOL_DATA.description;
-const URL = "https://toolnami.lovable.app/tools/qr-code-generator";
+const URL = "https://toolnami.com/tools/qr-code-generator";
 const FAQS = TOOL_DATA.faqs;
 
 export const Route = createFileRoute("/tools/qr-code-generator")({

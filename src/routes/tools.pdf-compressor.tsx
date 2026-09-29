@@ -11,7 +11,7 @@ import { findLiveTool, getDynamicUses } from "@/lib/phase1-tools";
 const TOOL_DATA = findLiveTool("pdf-compressor");
 const TITLE = TOOL_DATA.title;
 const DESC = TOOL_DATA.description;
-const URL = "https://toolnami.lovable.app/tools/pdf-compressor";
+const URL = "https://toolnami.com/tools/pdf-compressor";
 const FAQS = TOOL_DATA.faqs;
 
 export const Route = createFileRoute("/tools/pdf-compressor")({

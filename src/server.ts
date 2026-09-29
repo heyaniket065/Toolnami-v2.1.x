@@ -1,4 +1,6 @@
 import "./lib/error-capture";
+import fs from "node:fs";
+import path from "node:path";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
@@ -17,6 +19,21 @@ async function getServerEntry(): Promise<ServerEntry> {
     );
   }
   return serverEntryPromise;
+}
+
+// Read llms.txt once
+let llmsTxtContent: string | null = null;
+function getLlmsTxt(): string {
+  if (!llmsTxtContent) {
+    try {
+      const p = path.resolve(process.cwd(), "public", "llms.txt");
+      llmsTxtContent = fs.readFileSync(p, "utf-8");
+    } catch {
+      llmsTxtContent =
+        "# ToolNami\nFast, free online tools for everyday work.\nhttps://toolnami.com";
+    }
+  }
+  return llmsTxtContent;
 }
 
 // h3 swallows in-handler throws into a normal 500 Response with body
@@ -49,6 +66,20 @@ export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const url = new URL(request.url);
+
+      // 1. Direct LLM Manifest route
+      if (url.pathname === "/llms.txt") {
+        return new Response(getLlmsTxt(), {
+          status: 200,
+          headers: {
+            "content-type": "text/markdown; charset=utf-8",
+            "cache-control": "public, max-age=86400, stale-while-revalidate=604800",
+            "access-control-allow-origin": "*",
+          },
+        });
+      }
+
+      // 2. Server-side AI assistant proxy route
       if (url.pathname === "/api/chat" && request.method === "POST") {
         try {
           const body = (await request.json()) as {
@@ -58,7 +89,10 @@ export default {
           const result = await handleAssistantChat(messages);
           return new Response(JSON.stringify(result), {
             status: 200,
-            headers: { "content-type": "application/json; charset=utf-8" },
+            headers: {
+              "content-type": "application/json; charset=utf-8",
+              "cache-control": "no-store",
+            },
           });
         } catch (apiErr) {
           console.error("API /api/chat error:", apiErr);
@@ -69,9 +103,45 @@ export default {
         }
       }
 
+      // 3. Delegate to TanStack Start SSR handler
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      const normalized = await normalizeCatastrophicSsrResponse(response);
+
+      // 4. Attach performance cache headers based on asset type
+      const isStaticAsset =
+        url.pathname.startsWith("/assets/") ||
+        url.pathname.startsWith("/_build/") ||
+        /\.(png|jpg|jpeg|webp|avif|svg|ico|css|js|woff2|webmanifest)$/i.test(url.pathname);
+
+      if (isStaticAsset && normalized.status === 200) {
+        const newHeaders = new Headers(normalized.headers);
+        newHeaders.set("cache-control", "public, max-age=31536000, immutable");
+        return new Response(normalized.body, {
+          status: normalized.status,
+          statusText: normalized.statusText,
+          headers: newHeaders,
+        });
+      }
+
+      // Dynamic page responses
+      if (
+        normalized.headers.get("content-type")?.includes("text/html") &&
+        normalized.status === 200
+      ) {
+        const newHeaders = new Headers(normalized.headers);
+        newHeaders.set(
+          "cache-control",
+          "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400",
+        );
+        return new Response(normalized.body, {
+          status: normalized.status,
+          statusText: normalized.statusText,
+          headers: newHeaders,
+        });
+      }
+
+      return normalized;
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {

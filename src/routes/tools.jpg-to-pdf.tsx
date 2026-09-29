@@ -11,7 +11,7 @@ import { findLiveTool, getDynamicUses } from "@/lib/phase1-tools";
 const TOOL_DATA = findLiveTool("jpg-to-pdf");
 const TITLE = TOOL_DATA.title;
 const DESC = TOOL_DATA.description;
-const URL = "https://toolnami.lovable.app/tools/jpg-to-pdf";
+const URL = "https://toolnami.com/tools/jpg-to-pdf";
 const FAQS = TOOL_DATA.faqs;
 
 export const Route = createFileRoute("/tools/jpg-to-pdf")({

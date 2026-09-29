@@ -1,0 +1,32 @@
+{
+  "name": "ToolNami",
+  "short_name": "ToolNami",
+  "description": "Fast, free online tools for everyday work — PDF, image, text, SEO and developer utilities.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030816",
+  "theme_color": "#00d4ff",
+  "icons": [
+    {
+      "src": "/favicon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

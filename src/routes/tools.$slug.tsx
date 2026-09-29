@@ -82,8 +82,8 @@ export const Route = createFileRoute("/tools/$slug")({
         { property: "og:type", content: "website" },
         { property: "og:url", content: toolUrl },
         { name: "twitter:card", content: "summary_large_image" },
-        { name: "twitter:site", content: "@Instgram136" },
-        { name: "twitter:creator", content: "@Instgram136" },
+        { name: "twitter:site", content: "@aniketbhalerao" },
+        { name: "twitter:creator", content: "@aniketbhalerao" },
         { name: "twitter:title", content: tool.seoTitle },
         { name: "twitter:description", content: tool.seoDescription },
         { name: "twitter:image", content: tool.image },
@@ -306,6 +306,7 @@ function PasswordGeneratorTool() {
 
   useEffect(() => {
     if (!password) generate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [password]);
 
   const copy = () => {
@@ -438,6 +439,7 @@ function UuidGeneratorTool() {
 
   useEffect(() => {
     generate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count]);
 
   const copyAll = () => {
@@ -1015,6 +1017,7 @@ function AgeCalculatorTool() {
 
   useEffect(() => {
     calculate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dob]);
 
   return (

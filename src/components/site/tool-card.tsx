@@ -67,6 +67,9 @@ export function ToolCard({ tool, category }: { tool: Tool; category?: ToolCatego
         <img
           src={imgSrc}
           alt={tool.title}
+          width={400}
+          height={250}
+          decoding="async"
           onError={() => {
             if (imgSrc !== fallbackImage) {
               setImgSrc(fallbackImage);

@@ -31,17 +31,17 @@ export const Route = createFileRoute("/")({
         content:
           "One bright, uncluttered home for the everyday tools you keep searching for. 100% free, fast, and browser-based.",
       },
-      { property: "og:image", content: "/assets/tools/3d-pdf-compressor.png" },
+      { property: "og:image", content: "https://toolnami.com/logo-512.png" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Instgram136" },
-      { name: "twitter:creator", content: "@Instgram136" },
+      { name: "twitter:site", content: "@aniketbhalerao" },
+      { name: "twitter:creator", content: "@aniketbhalerao" },
       { name: "twitter:title", content: "ToolNami — Fast, Free Online Tools for Everyday Work" },
       {
         name: "twitter:description",
         content:
           "One bright, uncluttered home for the everyday tools you keep searching for. 100% free, fast, and browser-based.",
       },
-      { name: "twitter:image", content: "/assets/tools/3d-pdf-compressor.png" },
+      { name: "twitter:image", content: "https://toolnami.com/logo-512.png" },
     ],
     links: [{ rel: "canonical", href: "https://toolnami.com/" }],
   }),
