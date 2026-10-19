@@ -14,6 +14,8 @@ export default defineConfig({
     server: { entry: "server" },
   },
   nitro: {
-    preset: "netlify",
+    // Use Nitro's native Vercel output so SSR routes and the client entry
+    // are deployed together instead of falling back to an empty HTML shell.
+    preset: "vercel",
   },
 });
